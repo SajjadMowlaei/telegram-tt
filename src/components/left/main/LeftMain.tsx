@@ -175,11 +175,7 @@ const LeftMain: FC<OwnProps> = ({
         content={content}
         contactsFilter={contactsFilter}
         onSearchQuery={onSearchQuery}
-        onSelectSettings={handleSelectSettings}
-        onSelectContacts={handleSelectContacts}
-        onSelectArchived={handleSelectArchived}
         onReset={onReset}
-        shouldSkipTransition={shouldSkipTransition}
         isClosingSearch={isClosingSearch}
       />
       <Transition

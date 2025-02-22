@@ -423,6 +423,9 @@ const Composer: FC<OwnProps & StateProps> = ({
   const storyReactionRef = useRef<HTMLButtonElement>(null);
 
   const [getHtml, setHtml] = useSignal('');
+  const [history, setHistory] = useState<string[]>([]);
+  const [future, setFuture] = useState<string[]>([]);
+  const [currentHtml, setCurrentHtml] = useState<string>('');
   const [isMounted, setIsMounted] = useState(false);
   const getSelectionRange = useGetSelectionRange(editableInputCssSelector);
   const lastMessageSendTimeSeconds = useRef<number>();
@@ -1594,6 +1597,8 @@ const Composer: FC<OwnProps & StateProps> = ({
   const handleStopEffect = useLastCallback(() => { hideEffectInComposer({ }); });
 
   const onSend = useMemo(() => {
+    setHistory([])
+    setFuture([])
     switch (mainButtonState) {
       case MainButtonState.Edit:
         return handleEditComplete;
@@ -1608,6 +1613,50 @@ const Composer: FC<OwnProps & StateProps> = ({
     && botCommands !== false && !activeVoiceRecording;
 
   const effectEmoji = areEffectsSupported && effect?.emoticon;
+
+  const handleHtmlChange = useLastCallback((newHtml: string) => {
+    setHistory((prevHistory) => [...prevHistory, currentHtml]);
+    setCurrentHtml(newHtml);
+    setHtml(newHtml);
+    setFuture([]);
+  });
+
+  const handleUndo = useLastCallback(() => {
+    if (history.length === 0) return;
+  
+    const previousHtml = history[history.length - 1];
+    setFuture((prevFuture) => [...prevFuture, currentHtml]);
+    setCurrentHtml(previousHtml);
+    setHtml(previousHtml);
+    setHistory((prevHistory) => prevHistory.slice(0, -1));
+  });
+
+  const handleRedo = useLastCallback(() => {
+    if (future.length === 0) return;
+  
+    const nextHtml = future[future.length - 1];
+    setHistory((prevHistory) => [...prevHistory, currentHtml]);
+    setCurrentHtml(nextHtml);
+    setHtml(nextHtml);
+    setFuture((prevFuture) => prevFuture.slice(0, -1));
+  });
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'z') {
+        event.preventDefault();
+        handleUndo();
+      } else if ((event.ctrlKey || event.metaKey) && event.key === 'y') {
+        event.preventDefault();
+        handleRedo();
+      }
+    };
+  
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleUndo, handleRedo]);
 
   return (
     <div className={fullClassName}>
@@ -1852,7 +1901,7 @@ const Composer: FC<OwnProps & StateProps> = ({
             noFocusInterception={hasAttachments}
             shouldSuppressFocus={isMobile && isSymbolMenuOpen}
             shouldSuppressTextFormatter={isEmojiTooltipOpen || isMentionTooltipOpen || isInlineBotTooltipOpen}
-            onUpdate={setHtml}
+            onUpdate={handleHtmlChange}
             onSend={onSend}
             onSuppressedFocus={closeSymbolMenu}
             onFocus={markInputHasFocus}

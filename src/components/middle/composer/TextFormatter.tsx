@@ -40,6 +40,7 @@ interface ISelectedTextFormats {
   strikethrough?: boolean;
   monospace?: boolean;
   spoiler?: boolean;
+  quote?: boolean;
 }
 
 const TEXT_FORMAT_BY_TAG_NAME: Record<string, keyof ISelectedTextFormats> = {
@@ -51,6 +52,7 @@ const TEXT_FORMAT_BY_TAG_NAME: Record<string, keyof ISelectedTextFormats> = {
   DEL: 'strikethrough',
   CODE: 'monospace',
   SPAN: 'spoiler',
+  BLOCKQUOTE: 'quote'
 };
 const fragmentEl = document.createElement('div');
 
@@ -189,13 +191,13 @@ const TextFormatter: FC<OwnProps> = ({
       return 'active';
     }
 
-    if (key === 'monospace' || key === 'strikethrough') {
+    if (key === 'monospace' || key === 'strikethrough' || key === "quote") {
       if (Object.keys(selectedTextFormats).some(
         (fKey) => fKey !== key && Boolean(selectedTextFormats[fKey as keyof ISelectedTextFormats]),
       )) {
         return 'disabled';
       }
-    } else if (selectedTextFormats.monospace || selectedTextFormats.strikethrough) {
+    } else if (selectedTextFormats.monospace || selectedTextFormats.strikethrough || selectedTextFormats.quote) {
       return 'disabled';
     }
 
@@ -219,6 +221,7 @@ const TextFormatter: FC<OwnProps> = ({
         ...selectedFormats,
         spoiler: false,
       }));
+      onClose();
 
       return;
     }
@@ -283,6 +286,7 @@ const TextFormatter: FC<OwnProps> = ({
         ...selectedFormats,
         strikethrough: false,
       }));
+      onClose();
 
       return;
     }
@@ -309,12 +313,40 @@ const TextFormatter: FC<OwnProps> = ({
         ...selectedFormats,
         monospace: false,
       }));
+      onClose();
 
       return;
     }
 
     const text = getSelectedText(true);
     document.execCommand('insertHTML', false, `<code class="text-entity-code" dir="auto">${text}</code>`);
+    onClose();
+  });
+
+  const handleQuoteText = useLastCallback(() => {
+    if (selectedTextFormats.quote) {
+      const element = getSelectedElement();
+      if (
+        !selectedRange
+        || !element
+        || element.tagName !== 'BLOCKQUOTE'
+        || !element.textContent
+      ) {
+        return;
+      }
+
+      element.replaceWith(element.textContent);
+      setSelectedTextFormats((selectedFormats) => ({
+        ...selectedFormats,
+        quote: false,
+      }));
+      onClose();
+
+      return;
+    }
+
+    const text = getSelectedText(true);
+    document.execCommand('insertHTML', false, `<blockquote>${text}</blockquote>`);
     onClose();
   });
 
@@ -464,6 +496,14 @@ const TextFormatter: FC<OwnProps> = ({
           onClick={handleMonospaceText}
         >
           <Icon name="monospace" />
+        </Button>
+        <Button
+          color="translucent"
+          ariaLabel="Quote text"
+          className={getFormatButtonClassName('quote')}
+          onClick={handleQuoteText}
+        >
+          <Icon name="quote" />
         </Button>
         <div className="TextFormatter-divider" />
         <Button color="translucent" ariaLabel={lang('TextFormat.AddLinkTitle')} onClick={openLinkControl}>

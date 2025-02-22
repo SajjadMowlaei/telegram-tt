@@ -334,16 +334,6 @@ const ChatFolders: FC<OwnProps & StateProps> = ({
       )}
     >
       {shouldRenderStoryRibbon && <StoryRibbon isClosing={isStoryRibbonClosing} />}
-      {shouldRenderFolders ? (
-        <TabList
-          contextRootElementSelector="#LeftColumn"
-          tabs={folderTabs}
-          activeTab={activeChatFolder}
-          onSwitchTab={handleSwitchTab}
-        />
-      ) : shouldRenderPlaceholder ? (
-        <div ref={placeholderRef} className="tabs-placeholder" />
-      ) : undefined}
       <Transition
         ref={transitionRef}
         name={shouldSkipHistoryAnimations ? 'none' : lang.isRtl ? 'slideOptimizedRtl' : 'slideOptimized'}

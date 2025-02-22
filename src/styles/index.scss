@@ -230,6 +230,23 @@ body:not(.is-ios) {
   }
 }
 
+.emoji-medium {
+  background: no-repeat;
+  background-size: calc(var(--emoji-size) + 0.75rem);
+  color: transparent;
+  display: inline-block;
+  width: calc(var(--emoji-size) + 0.75rem);
+  height: calc(var(--emoji-size) + 0.75rem);
+  margin-inline-end: 1px;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  &::selection {
+    background-color: var(--color-selection-highlight-emoji);
+    color: transparent;
+  }
+}
+
 .div-button {
   outline: none !important;
   cursor: var(--custom-cursor, pointer);
